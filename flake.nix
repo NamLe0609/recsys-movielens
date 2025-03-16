@@ -18,14 +18,13 @@
             (with pkgs.python311Packages; [
               pip
               venvShellHook
-              pandas
-              numpy
-              matplotlib
+              jupyter
+              ipython
             ]);
-            shellHook = ''
-              source .venv/bin/activate
-              pip install -r requirements.txt
-            '';
+          shellHook = ''
+            source .venv/bin/activate
+            pip install -r requirements.txt
+          '';
         };
       });
     };
