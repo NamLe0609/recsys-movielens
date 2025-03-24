@@ -24,6 +24,9 @@
           shellHook = ''
             source .venv/bin/activate
             pip install -r requirements.txt
+            export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [
+              pkgs.stdenv.cc.cc
+            ]}
           '';
         };
       });
