@@ -1,12 +1,16 @@
 # Avoid warning flooding the console
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 import warnings
+
 warnings.filterwarnings("ignore")
 import logging
-logging.getLogger('tensorflow').setLevel(logging.ERROR)
+
+logging.getLogger("tensorflow").setLevel(logging.ERROR)
 import tensorflow as tf
-tf.get_logger().setLevel('ERROR')
+
+tf.get_logger().setLevel("ERROR")
 
 # Default imports
 import pandas as pd
@@ -26,6 +30,7 @@ from libreco.evaluation import evaluate
 from libreco.algorithms import NCF
 
 import optuna
+
 
 def bfm_recommend(
     bfm_model, user_id, df_rating, ohe, movie_info_ohe, movie_genre_mle, movie_info, n
@@ -158,6 +163,7 @@ df_movie["release_year"] = df_movie["title"].str.extract(r"\((\d{4})\)")
 df_movie["title"] = df_movie["title"].str.replace(r"\s*\(\d{4}\)$", "", regex=True)
 df_movie["release_year"] = df_movie["release_year"].astype(str)
 
+print("Training and evaluating models... (All evaluation metrics shown in video are recorded during training)")
 # RS2: Neural Collaborative Filtering: RMSE/MAE
 mlb = MultiLabelBinarizer()
 libreco_full = df_rating.merge(df_movie, how="left", on="movieId")
@@ -241,8 +247,6 @@ ncf_result = evaluate(
     metrics=["rmse", "mae"],
 )
 
-print(f"RS2 (Neural Colaborative Filtering): RMSE: {ncf_result['rmse']:.4f}, MAE: {ncf_result['mae']:.4f}")
-
 train_data, eval_data, test_data = random_split(
     libreco_full, multi_ratios=[0.8, 0.1, 0.1], seed=42
 )
@@ -253,11 +257,13 @@ interactions = len(libreco_full)
 user_novelties = []
 for user_id in libreco_full["user"].unique():
     user_novelties.append(
-        novelty(ncf_model.recommend_user(user=user_id, n_rec=10)[user_id], interactions, item_popularity)
+        novelty(
+            ncf_model.recommend_user(user=user_id, n_rec=10)[user_id],
+            interactions,
+            item_popularity,
+        )
     )
 overall_novelty = np.mean(user_novelties)
-
-print(f"RS2 (Neural Colaborative Filtering): Novelty: {overall_novelty:.4f}")
 
 # RS1: Bayesian Factorization Machine: RMSE/MAE
 FEATURE_COLUMNS = ["userId", "movieId"]
@@ -283,8 +289,6 @@ output = train_predict_fm(
     fm_rank=20,
     n_splits=5,
 )
-
-print(f"RS1 (Bayesian Factorization Machine): RMSE: {output[0]:.4f}, MAE: {output[1]:.4f}")
 
 X_train_extended = sps.hstack(
     [
@@ -319,6 +323,13 @@ best_bfm.fit(
 item_popularity = df_rating.groupby("movieId")["userId"].nunique().to_dict()
 interactions = len(df_rating)
 
+print(
+    f"RS2 (Neural Colaborative Filtering): RMSE: {ncf_result['rmse']:.4f}, MAE: {ncf_result['mae']:.4f}"
+)
+print(f"RS2 (Neural Colaborative Filtering): Novelty: {overall_novelty:.4f}")
+print(
+    f"RS1 (Bayesian Factorization Machine): RMSE: {output[0]:.4f}, MAE: {output[1]:.4f}"
+)
 print("Calculating novelty. This may take a while... (approx. 10 minutes)")
 user_novelties = []
 for user_id in df_rating["userId"].unique():

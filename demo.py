@@ -70,7 +70,7 @@ def main():
         print("\nLogin: Waiting User ID.")
         user_id = int(input("Enter User ID: ").strip())
         if user_id not in user_ids:
-            print("User ID not found. Recommending for cold start user (popular).")
+            print("User ID not found. Recommending for cold start user.")
     except ValueError:
         print("Please enter a valid User ID.")
         sys.exit(1)
